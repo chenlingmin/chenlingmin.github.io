@@ -6,11 +6,15 @@
   
   <title>黑牛随笔</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
+  <meta name="description" content="Mybatis PageHelper 提供与 spring-data 一致的分页 API 的实践spring-data 项目中，为数据访问提供熟悉且一致的基于 Spring 的编程模型，同时仍保留底层数据存储的特殊特性，其中 spring-data-jpa 更容易实践领域驱动设计的特性，尤其收开发者欢迎。 然而，面对一些比较复杂的连表查询，如果严格按照 CQRS 的方案实践，方案又会显得比较笨重。">
+<meta property="og:type" content="article">
 <meta property="og:title" content="黑牛随笔">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="http://example.com/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/index.html">
 <meta property="og:site_name" content="黑牛随笔">
+<meta property="og:description" content="Mybatis PageHelper 提供与 spring-data 一致的分页 API 的实践spring-data 项目中，为数据访问提供熟悉且一致的基于 Spring 的编程模型，同时仍保留底层数据存储的特殊特性，其中 spring-data-jpa 更容易实践领域驱动设计的特性，尤其收开发者欢迎。 然而，面对一些比较复杂的连表查询，如果严格按照 CQRS 的方案实践，方案又会显得比较笨重。">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-12-07T09:03:15.313Z">
+<meta property="article:modified_time" content="2021-12-07T09:03:15.313Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
@@ -69,9 +73,7 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-MybatisPageHelper提供与spring-data一致的分页API的实践" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-MybatisPageHelper提供与spring-data一致的分页API的实践" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/" class="article-date">
   <time class="dt-published" datetime="2021-12-07T09:03:15.313Z" itemprop="datePublished">2021-12-07</time>
@@ -112,77 +114,19 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-表格驱动法与NavigableMap的使用" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/" class="article-date">
-  <time class="dt-published" datetime="2021-12-07T08:44:55.000Z" itemprop="datePublished">2021-12-07</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/">表格驱动法优化</a>
-    </h1>
+    <a href="/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">表格驱动法优化</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="表格驱动的常见形式"><a href="#表格驱动的常见形式" class="headerlink" title="表格驱动的常见形式"></a>表格驱动的常见形式</h2><p>开发中，常常会用到各种分支逻辑，<code>if</code> <code>else</code>  <code>switch</code>  <code>case</code> 霸屏，如下代码。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (state == <span class="number">1</span>) &#123;</span><br><span class="line">    process1();</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (state == <span class="number">2</span>)&#123;</span><br><span class="line">    process2();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    processByDefault();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在编程的世界，只有两种元素组成，那就是数据与代码。像上面的代码，估计大家一看，除了 <code>state</code> 的 <code>&#123;1, 2...&#125;</code> 是数据的概念，其他的诸如 <code>if</code> <code>else</code> <code>process1()</code> <code>process2()</code> <code>processByDefault()</code> 自然也就化为代码的部分。</p>
-<p>而代码和数据的划分，不是泾渭分明的，你写的任何代码，在编译器的角度，又成为了数据。</p>
-<p>因此如果我们换一个角度思考上述代码，重新定义数据，可能就会得到另一个结果。 如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;Integer, Runnable&gt; stateProcessMap = <span class="keyword">new</span> HashMap&lt;&gt;&#123;&#123;</span><br><span class="line">    put(<span class="number">1</span>, <span class="keyword">this</span>::process1);</span><br><span class="line">    put(<span class="number">2</span>, <span class="keyword">this</span>::process1);</span><br><span class="line">&#125;&#125;;</span><br><span class="line"></span><br><span class="line">stateProcessMap.getOrDefault(state, <span class="keyword">this</span>::processByDefault).run();</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>提出了 <code>stateProcessMap</code> 的数据，表示 <code>state</code> 与业务的映射关系。</p>
-<p>那数据的提出有什么好处呢？</p>
-<p>显而易见的是，以后同类结构的修改，你不再是改 <code>if</code> <code>else</code> 代码的部分，而只需要修改 <code>stateProcessMap</code> 数据部分。</p>
-<p>可不要小看这一点点小改动，虽然现在 stateProcessMap 概念是数据，而载体还是在代码上，但可是动静分离的基础。</p>
-<h2 id="阶梯式的表格驱动"><a href="#阶梯式的表格驱动" class="headerlink" title="阶梯式的表格驱动"></a>阶梯式的表格驱动</h2><p>在常见形式中，key 一般为静态的数据，能够用在 <code>if (x == xx)</code> 等于的部分，而如果面对如下的代码，可能又得继续思考了。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (distance &gt; <span class="number">3</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.avg3();   </span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (distance &gt; <span class="number">2</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.avg2();</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (distance &gt; <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.avg1();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.avg();   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述逻辑，由于是阶梯式的逻辑，必须先从最大的数开始判断，所以无法使用常规的形式，你可以这样重新定义数据，如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span>[] distanceLevels = &#123;<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>&#125;;</span><br><span class="line">Supplier[] avgLevels = &#123;<span class="keyword">this</span>::avg3, <span class="keyword">this</span>.avg2, <span class="keyword">this</span>.avg1&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; distanceLevels.length; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (distanceLevels[i] &gt; state) &#123;</span><br><span class="line">        <span class="keyword">return</span> avgLevels[i].get();</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.avg(); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述形式，我们称为阶梯访问表，虽然不如常见形式简介，但也达到了分离了数据与代码的效果，取得了更高的扩展性。</p>
-<h2 id="NavigableMap-在表格驱动中阶梯逻辑的使用"><a href="#NavigableMap-在表格驱动中阶梯逻辑的使用" class="headerlink" title="NavigableMap 在表格驱动中阶梯逻辑的使用"></a>NavigableMap 在表格驱动中阶梯逻辑的使用</h2><p>在上述的阶梯访问表中，也存在几个问题:</p>
-<ul>
-<li> 大量数据时，存在线性访问，查找成本较大</li>
-<li> 需要手工保证 key -&gt; value  的映射</li>
-</ul>
-<p>应运而生的，我们想到可以使用 TreeMap，即是 key -&gt; value 的结构，又是有序的结构。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">NavigableMap&lt;Integer, Supplier&gt; distanceAvgMap = <span class="keyword">new</span> TreeMap&lt;&gt; &#123;&#123;</span><br><span class="line">    put(<span class="number">1</span>, <span class="keyword">this</span>::avg1);</span><br><span class="line">    put(<span class="number">2</span>, <span class="keyword">this</span>::avg2);</span><br><span class="line">    put(<span class="number">3</span>, <span class="keyword">this</span>::avg3);</span><br><span class="line">&#125;&#125;;</span><br><span class="line"></span><br><span class="line">distanceAvgMap.lowerEntry(distance).getValue().get();</span><br></pre></td></tr></table></figure>
-<p><code>NavigableMap</code> 是一个可导航的 <code>Map</code> 接口, 上层接口为 <code>SortedMap</code>，顶层接口为 <code>Map</code>，<code>TreeMap</code> 是 <code>NavigableMap</code> 的具体实现，是一个平衡二叉树的实现，主流的实现是八股文中的红黑树，其中 <code>lowerEntry(key)</code> 是以二分查找法查找一个小于或等于 <code>key</code> 的 <code>Entry</code>。</p>
-<p>这样，我们阶梯式的逻辑，就用一个二叉树的 <code>Map</code> 数据结构表示成了数据形式，与阶梯访问表相比，更优雅的达到了数据与代码分离的效果。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/" data-id="ckwvv7aw30000mcgtfte4f9xk" data-title="表格驱动法优化" class="article-share-link">Share</a>
-      
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-
-  
 
 
 </section>
