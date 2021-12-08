@@ -3,11 +3,11 @@
   <title>黑牛随笔</title>
   <icon>https://www.gravatar.com/avatar/46e1f3db99e2fa0758333d0897d8e925</icon>
   
-  <link href="http://example.com/atom.xml" rel="self"/>
+  <link href="https://chenlingmin.github.io/atom.xml" rel="self"/>
   
-  <link href="http://example.com/"/>
+  <link href="https://chenlingmin.github.io/"/>
   <updated>2021-12-08T03:25:59.050Z</updated>
-  <id>http://example.com/</id>
+  <id>https://chenlingmin.github.io/</id>
   
   <author>
     <name>黑牛</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>Mybatis PageHelper 提供与 spring-data 一致的分页 API 的实践</title>
-    <link href="http://example.com/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/"/>
-    <id>http://example.com/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/</id>
+    <link href="https://chenlingmin.github.io/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/"/>
+    <id>https://chenlingmin.github.io/2021/12/07/MybatisPageHelper%E6%8F%90%E4%BE%9B%E4%B8%8Espring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API%E7%9A%84%E5%AE%9E%E8%B7%B5/</id>
     <published>2021-12-07T08:44:55.000Z</published>
     <updated>2021-12-08T03:25:59.050Z</updated>
     
@@ -34,14 +34,14 @@
     
     
     
-    <category term="编码技巧" scheme="http://example.com/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
+    <category term="编码技巧" scheme="https://chenlingmin.github.io/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
     
   </entry>
   
   <entry>
     <title>表格驱动法优化</title>
-    <link href="http://example.com/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
-    <id>http://example.com/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
+    <link href="https://chenlingmin.github.io/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
+    <id>https://chenlingmin.github.io/2021/12/07/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%B8%8ENavigableMap%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
     <published>2021-12-07T08:44:55.000Z</published>
     <updated>2021-12-08T02:51:45.114Z</updated>
     
@@ -56,14 +56,14 @@
     
     
     
-    <category term="编码技巧" scheme="http://example.com/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
+    <category term="编码技巧" scheme="https://chenlingmin.github.io/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
     
   </entry>
   
   <entry>
     <title>关于枚举的高级用法</title>
-    <link href="http://example.com/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/"/>
-    <id>http://example.com/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/</id>
+    <link href="https://chenlingmin.github.io/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/"/>
+    <id>https://chenlingmin.github.io/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/</id>
     <published>2021-12-07T08:34:55.000Z</published>
     <updated>2021-12-08T02:51:34.210Z</updated>
     
@@ -78,7 +78,7 @@
     
     
     
-    <category term="编码技巧" scheme="http://example.com/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
+    <category term="编码技巧" scheme="https://chenlingmin.github.io/tags/%E7%BC%96%E7%A0%81%E6%8A%80%E5%B7%A7/"/>
     
   </entry>
   
