@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>GC-引用计数法之部分标记清除法 | 黑牛随笔</title><meta name="keywords" content="GC"><meta name="author" content="黑牛,chenlingmin.com@gmail.com"><meta name="copyright" content="黑牛"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言众所周知，垃圾回收主要存在引用计数、GC Roots 两种思路。引用计数在循环引用场景中的缺陷，所以在 jvm 的大部分实现中，都采用了 GC Roots 方式。 循环引用GCRootsA count &#x3D; 2B count &#x3D; 1C count &#x3D; 1   断开 GC Roots 与A 的关系GCRootsA count &#x3D; 1B count &#x3D; 1C count &#x3D; 1  然而，引用计数也存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GC-引用计数法之部分标记清除法">
+<meta property="og:url" content="https://chenlingmin.github.io/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/index.html">
+<meta property="og:site_name" content="黑牛随笔">
+<meta property="og:description" content="前言众所周知，垃圾回收主要存在引用计数、GC Roots 两种思路。引用计数在循环引用场景中的缺陷，所以在 jvm 的大部分实现中，都采用了 GC Roots 方式。 循环引用GCRootsA count &#x3D; 2B count &#x3D; 1C count &#x3D; 1   断开 GC Roots 与A 的关系GCRootsA count &#x3D; 1B count &#x3D; 1C count &#x3D; 1  然而，引用计数也存">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg">
+<meta property="article:published_time" content="2021-12-13T08:44:55.000Z">
+<meta property="article:modified_time" content="2021-12-13T10:17:53.768Z">
+<meta property="article:author" content="黑牛">
+<meta property="article:tag" content="GC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://chenlingmin.github.io/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'GC-引用计数法之部分标记清除法',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-13 18:17:53'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="黑牛随笔" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://avatars.githubusercontent.com/u/8233283" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div></div><hr/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">黑牛随笔</a></span><div id="menus"><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">GC-引用计数法之部分标记清除法</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-12-13T08:44:55.000Z" title="发表于 2021-12-13 16:44:55">2021-12-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-12-13T10:17:53.768Z" title="更新于 2021-12-13 18:17:53">2021-12-13</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="GC-引用计数法之部分标记清除法"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>众所周知，垃圾回收主要存在引用计数、GC Roots 两种思路。引用计数在循环引用场景中的缺陷，所以在 jvm 的大部分实现中，都采用了 GC Roots 方式。</p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="268px" preserveAspectRatio="none" style="width:259px;height:268px;background:#FFFFFF;" version="1.1" viewBox="0 0 259 268" width="259px" zoomAndPan="magnify"><defs><filter height="300%" id="f1pyd26k5pegno" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacing" textLength="72" x="87.25" y="16.708">循环引用</text><!--MD5=[66d4af7565259431549d7894ce782b28]
+entity GCRoots--><rect fill="#FFFFFF" filter="url(#f1pyd26k5pegno)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="83" x="155" y="27.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="165" y="50.9482">GCRoots</text><!--MD5=[770389ab9df153645bc6ef28055eb2b5]
+entity A--><rect fill="#FFFFFF" filter="url(#f1pyd26k5pegno)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="102" x="145.5" y="123.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="82" x="155.5" y="146.9482">A count = 2</text><!--MD5=[b2d39259b6aeabc16b394deeb0238426]
+entity B--><rect fill="#FFFFFF" filter="url(#f1pyd26k5pegno)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="103" x="76" y="219.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="86" y="242.9482">B count = 1</text><!--MD5=[16fab723be418f7eaf2ea4bd895a8e51]
+entity C--><rect fill="#FFFFFF" filter="url(#f1pyd26k5pegno)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="103" x="7" y="123.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="17" y="146.9482">C count = 1</text><!--MD5=[eec374e91749b915526c4146dc1e343d]
+link GCRoots to A--><path d="M196.5,64.1941 C196.5,79.4321 196.5,101.7601 196.5,118.4111 " fill="none" id="GCRoots-to-A" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="196.5,123.8211,200.5,114.8211,196.5,118.8211,192.5,114.8211,196.5,123.8211" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[5e2eec62a50b26b6b0db6c12e4ee289c]
+link A to B--><path d="M183.844,160.1941 C172.367,175.8297 155.411,198.9297 143.099,215.702 " fill="none" id="A-to-B" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="140.075,219.8214,148.6247,214.9325,143.0333,215.7905,142.1753,210.1991,140.075,219.8214" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[cd25d8247324207f828a4db9f58ed69d]
+link B to C--><path d="M114.925,219.8214 C103.473,204.2207 86.5186,181.1234 74.1855,164.3217 " fill="none" id="B-to-C" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="71.1557,160.1941,73.2568,169.8163,74.1144,164.2248,79.7058,165.0824,71.1557,160.1941" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[1454d5cde7bc0c276b7bdc83fba84c24]
+link C to A--><path d="M110.25,141.9531 C120.196,141.9531 130.142,141.9531 140.088,141.9531 " fill="none" id="C-to-A" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="145.289,141.9531,136.289,137.9531,140.289,141.9531,136.289,145.9531,145.289,141.9531" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[032f79d6c5c777a9b2babb3c088d472f]
+@startuml
+title 循环引用
+rectangle GCRoots {
+}
+rectangle "A count = 2" as A {
+}
+rectangle  "B count = 1" as B {
+}
+rectangle  "C count = 1" as C {
+}
+
+GCRoots- ->A
+A - -> B
+B - -> C
+C -> A
+@enduml
+
+PlantUML version 1.2021.16beta3(Unknown compile time)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
+
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="268px" preserveAspectRatio="none" style="width:260px;height:268px;background:#FFFFFF;" version="1.1" viewBox="0 0 260 268" width="260px" zoomAndPan="magnify"><defs><filter height="300%" id="fyz3352u18gx4" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacing" textLength="223" x="12" y="16.708">断开 GC Roots 与A 的关系</text><!--MD5=[66d4af7565259431549d7894ce782b28]
+entity GCRoots--><rect fill="#FFFFFF" filter="url(#fyz3352u18gx4)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="83" x="155" y="27.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="165" y="50.9482">GCRoots</text><!--MD5=[770389ab9df153645bc6ef28055eb2b5]
+entity A--><rect fill="#8A8F82" filter="url(#fyz3352u18gx4)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="103" x="145" y="123.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="155" y="146.9482">A count = 1</text><!--MD5=[b2d39259b6aeabc16b394deeb0238426]
+entity B--><rect fill="#8A8F82" filter="url(#fyz3352u18gx4)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="103" x="76" y="219.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="86" y="242.9482">B count = 1</text><!--MD5=[16fab723be418f7eaf2ea4bd895a8e51]
+entity C--><rect fill="#8A8F82" filter="url(#fyz3352u18gx4)" height="36.2969" style="stroke:#000000;stroke-width:1.5;" width="103" x="7" y="123.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="17" y="146.9482">C count = 1</text><!--MD5=[eec374e91749b915526c4146dc1e343d]
+link GCRoots to A--><path d="M196.5,69.6151 C196.5,84.4691 196.5,103.8011 196.5,118.5941 " fill="none" id="GCRoots-A" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="196.5,123.8211,200.5,114.8211,196.5,118.8211,192.5,114.8211,196.5,123.8211" style="stroke:#A80036;stroke-width:1.0;"/><path d="M192.5,69.1941 L200.5,77.1941 M200.5,69.1941 L192.5,77.1941 " fill="none" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[5e2eec62a50b26b6b0db6c12e4ee289c]
+link A to B--><path d="M183.844,160.1941 C172.367,175.8297 155.411,198.9297 143.099,215.702 " fill="none" id="A-to-B" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="140.075,219.8214,148.6247,214.9325,143.0333,215.7905,142.1753,210.1991,140.075,219.8214" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[cd25d8247324207f828a4db9f58ed69d]
+link B to C--><path d="M114.925,219.8214 C103.473,204.2207 86.5186,181.1234 74.1855,164.3217 " fill="none" id="B-to-C" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="71.1557,160.1941,73.2568,169.8163,74.1144,164.2248,79.7058,165.0824,71.1557,160.1941" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[1454d5cde7bc0c276b7bdc83fba84c24]
+link C to A--><path d="M110.25,141.9531 C120.1,141.9531 129.951,141.9531 139.801,141.9531 " fill="none" id="C-to-A" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="#A80036" points="144.952,141.9531,135.952,137.9531,139.952,141.9531,135.952,145.9531,144.952,141.9531" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[9feceabc5d20cfb4cb28625b74cae3ab]
+@startuml
+title 断开 GC Roots 与A 的关系
+rectangle GCRoots {
+}
+rectangle "A count = 1" as A #8a8f82{
+}
+rectangle  "B count = 1" as B #8a8f82 {
+}
+rectangle  "C count = 1" as C #8a8f82{
+}
+
+GCRoots x- ->A
+A - -> B
+B - -> C
+C -> A
+@enduml
+
+PlantUML version 1.2021.16beta3(Unknown compile time)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
+
+<p>然而，引用计数也存在着其他垃圾回收算法的无法比拟的优点。</p>
+<ul>
+<li>实现简单便于理解；</li>
+<li>基本无 STW，实时回收；</li>
+</ul>
+<p>简单版的伪代码如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">// 新建对象</span><br><span class="line">new_obj(size) &#123;</span><br><span class="line">   obj = pick_chunk(size, $free_list)</span><br><span class="line">   if (obj == NULL) </span><br><span class="line">      allocation_fail()</span><br><span class="line">   else </span><br><span class="line">      obj.ref_cnt = 1</span><br><span class="line">      return obj</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 更新对象</span><br><span class="line">update_ptr(ptr, obj) &#123;</span><br><span class="line">   inc_ref_cnt(obj)</span><br><span class="line">   dec_ref_cnt(*ptr)</span><br><span class="line">   *ptr = obj</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">inc_ref_cnt(obj)&#123;</span><br><span class="line">   obj.ref_cnt++ </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dec_ref_cnt(obj) &#123;</span><br><span class="line">   obj.ref_cnt--</span><br><span class="line">   if (obj.ref_cnt == 0) </span><br><span class="line">      delete(obj)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">delete(obj) &#123;</span><br><span class="line">   for (child : children(obj)) </span><br><span class="line">      (*child).ref_cnt--</span><br><span class="line">      if ((*child).ref_cnt == 0)</span><br><span class="line">         delete(*child)</span><br><span class="line">   reclaim(obj)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在各种算法都在追求低时延 GC 的背景下，引用计数的优点让追逐者们望洋兴叹，甚至会幻想，如果使用者能不创建出循环引用的对象，那世界该多么美妙，去 ** 的STW，去 ** 的新老生代，去 ** 的记忆集。</p>
+<p>还有无计其数被八股文的摧残的人们，“去 ** 的……”。</p>
+<h2 id="退而求其次"><a href="#退而求其次" class="headerlink" title="退而求其次"></a>退而求其次</h2><p>虽然以上都是不切实际的幻想，那我能不能退而求其次的再幻想一次？能不能少一些循环引用，这样，我只要想个识别循环引用的办法，就可以了。</p>
+<p>我们先来分析一下循环引用问题产生的条件：</p>
+<ul>
+<li>对象间产生了循环引用；</li>
+<li>删除了外部到循环引用的引用，如上图中删除了 GC Roots 对 A 的引用；</li>
+</ul>
+<p>基于分析，我们如果在删除引用时，做一些初略的推断，假设大部分场景都是简单引用，那么 <code>obj.ref_cnt != 0</code> 时，则可能存在循环引用的对象群。</p>
+<p>部分标记清除算法，就是基于此思路设计的算法。</p>
+<h2 id="部分标记清除算法"><a href="#部分标记清除算法" class="headerlink" title="部分标记清除算法"></a>部分标记清除算法</h2><p>在部分标记 - 清除算法中，对象会被涂成 4 种不同的颜色来进行管理。每个颜色的含义:</p>
+<ol>
+<li>黑(BLACK):绝对不是垃圾的对象(对象产生时的初始颜色) </li>
+<li>白(WHITE):绝对是垃圾的对象</li>
+<li>灰(GRAY):搜索完毕的对象</li>
+<li>阴影(HATCH):可能是循环垃圾的对象</li>
+</ol>
+<p>我们可以在对象头中，使用 2 bit 的空间表示 obj.color。</p>
+<p>为了解释算法，我们假设一个堆如下情况。</p>
+<p><img src="https://s2.loli.net/2021/12/13/brw29TiyPHuIsSZ.png" alt="WX20211213-180013.png"></p>
+<p>有循环引用的对象群是 ABC 和 DE，其中 A 和 D 由根引用。此外，这里由 C 和 E 引用 F。 所有对象的颜色都还是初始状态下的黑色</p>
+<p>另外存在一个 <code>hatch_queue</code> 队列，存放可能是循环垃圾对象的对象。</p>
+<h3 id="先在源头找出可能存在循环的对象"><a href="#先在源头找出可能存在循环的对象" class="headerlink" title="先在源头找出可能存在循环的对象"></a>先在源头找出可能存在循环的对象</h3><p>根据产生循环引用的条件，我们知道可以在删除外部到循环引用的引用时，标志出 <code>HATCH</code> 对象，如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dec_ref_cnt(obj) &#123;</span><br><span class="line">   obj.ref_cnt--</span><br><span class="line">   if (obj.ref_cnt == 0)</span><br><span class="line">      delete(obj) </span><br><span class="line">   else if (obj.color != HATCH)</span><br><span class="line">      obj.color = HATCH</span><br><span class="line">      enqueue(obj, $hatch_queue)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+<p>我们的创建对象的方法可以变为，如果能创建出对象，则将其染色成黑色；如果不能创建，也就是堆满了情况，则扫描处理 <code>hatch_queue</code> 队列。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">// 新建对象</span><br><span class="line">new_obj(size) &#123;</span><br><span class="line">   obj = pick_chunk(size, $free_list)</span><br><span class="line">   if (obj != NULL) </span><br><span class="line">      obj.color = BLACK</span><br><span class="line">      obj.ref_cnt = 1</span><br><span class="line">      return obj</span><br><span class="line">   else if (is_not_empty($hatch_queue)) </span><br><span class="line">      scan_hatch_queue()</span><br><span class="line">      return new_obj(size)</span><br><span class="line">   else </span><br><span class="line">      allocation_fail()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:chenlingmin.com@gmail.com">黑牛</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://chenlingmin.github.io/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/">https://chenlingmin.github.io/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://chenlingmin.github.io" target="_blank">黑牛随笔</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/GC/">GC</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2021/12/08/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%BC%98%E5%8C%96ifelse/"><img class="next-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">表格驱动法优化ifelse</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://avatars.githubusercontent.com/u/8233283" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">黑牛</div><div class="author-info__description"></div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/chenlingmin"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%80%E8%80%8C%E6%B1%82%E5%85%B6%E6%AC%A1"><span class="toc-number">2.</span> <span class="toc-text">退而求其次</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E7%AE%97%E6%B3%95"><span class="toc-number">3.</span> <span class="toc-text">部分标记清除算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%88%E5%9C%A8%E6%BA%90%E5%A4%B4%E6%89%BE%E5%87%BA%E5%8F%AF%E8%83%BD%E5%AD%98%E5%9C%A8%E5%BE%AA%E7%8E%AF%E7%9A%84%E5%AF%B9%E8%B1%A1"><span class="toc-number">3.1.</span> <span class="toc-text">先在源头找出可能存在循环的对象</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/" title="GC-引用计数法之部分标记清除法"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="GC-引用计数法之部分标记清除法"/></a><div class="content"><a class="title" href="/2021/12/13/GC-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B9%8B%E9%83%A8%E5%88%86%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E6%B3%95/" title="GC-引用计数法之部分标记清除法">GC-引用计数法之部分标记清除法</a><time datetime="2021-12-13T08:44:55.000Z" title="发表于 2021-12-13 16:44:55">2021-12-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/08/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%BC%98%E5%8C%96ifelse/" title="表格驱动法优化ifelse"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="表格驱动法优化ifelse"/></a><div class="content"><a class="title" href="/2021/12/08/%E8%A1%A8%E6%A0%BC%E9%A9%B1%E5%8A%A8%E6%B3%95%E4%BC%98%E5%8C%96ifelse/" title="表格驱动法优化ifelse">表格驱动法优化ifelse</a><time datetime="2021-12-08T02:44:55.000Z" title="发表于 2021-12-08 10:44:55">2021-12-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/07/%E4%B8%BAMybatis%E6%8F%90%E4%BE%9Bspring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API/" title="为Mybatis提供spring-data一致的分页API"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="为Mybatis提供spring-data一致的分页API"/></a><div class="content"><a class="title" href="/2021/12/07/%E4%B8%BAMybatis%E6%8F%90%E4%BE%9Bspring-data%E4%B8%80%E8%87%B4%E7%9A%84%E5%88%86%E9%A1%B5API/" title="为Mybatis提供spring-data一致的分页API">为Mybatis提供spring-data一致的分页API</a><time datetime="2021-12-07T08:44:55.000Z" title="发表于 2021-12-07 16:44:55">2021-12-07</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" title="关于枚举的高级用法"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="关于枚举的高级用法"/></a><div class="content"><a class="title" href="/2021/12/07/%E6%9E%9A%E4%B8%BE%E7%9A%84%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" title="关于枚举的高级用法">关于枚举的高级用法</a><time datetime="2021-12-07T08:34:55.000Z" title="发表于 2021-12-07 16:34:55">2021-12-07</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2019/11/03/%E4%BB%8E%E2%80%9C%E7%99%BD%E9%A9%AC%E9%9D%9E%E9%A9%AC%E2%80%9D%E5%88%B0%E2%80%9C%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E2%80%9D/" title="从“白马非马”到“协变、逆变”"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="从“白马非马”到“协变、逆变”"/></a><div class="content"><a class="title" href="/2019/11/03/%E4%BB%8E%E2%80%9C%E7%99%BD%E9%A9%AC%E9%9D%9E%E9%A9%AC%E2%80%9D%E5%88%B0%E2%80%9C%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E2%80%9D/" title="从“白马非马”到“协变、逆变”">从“白马非马”到“协变、逆变”</a><time datetime="2019-11-03T04:44:55.000Z" title="发表于 2019-11-03 12:44:55">2019-11-03</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By 黑牛</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
